@@ -1,0 +1,48 @@
+*{
+    margin:2px;
+}
+table,tr,td,th{
+    border-collapse:collapse;
+}
+a{
+    text-decoration:none;
+}
+.cms-image{
+    width:200px;
+    float:left;
+}
+#item-table td{
+    padding:5px;
+}
+.cms-util-icon{
+    cursor:pointer;
+}
+.cms-util-icon,.file-attach-list{
+    float:left;
+    padding-left:10px;  
+    margin:0px;
+}
+.file-attach-list li{
+    list-style:none;
+    padding:0px;
+    margin:0px;
+    line-height:20px;
+    clear:both;
+}
+.file-attach-list li>a{
+    float:left;    
+    text-decoration:none;
+}
+.error,.required{
+    color:red;    
+}
+.ui-datepicker-trigger{
+    width:24px;
+    height:19px;
+    padding:0px;
+    border:none;
+    vertical-align:middle;
+    line-height:24px;
+    background:none;
+    cursor:pointer;
+}

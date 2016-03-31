@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="windows-1252" ?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.2//EN" "http://struts.apache.org/dtds/struts-config_1_2.dtd">
+<struts-config>  
+  <form-beans>
+    <form-bean name="fileBrowserForm" type="com.cms.struts.filebrowser.CmsFileBrowserForm"/>
+  </form-beans>
+  <action-mappings>
+    <action path="/browser" name="fileBrowserForm" parameter="method" scope="request" type="com.cms.struts.filebrowser.CmsFileBrowserAction">
+        <forward name="files" path="/FileList.jsp"/>
+        <forward name="folders" path="/FolderList.jsp"/>
+        <forward name="view" path="/view.jsp"/>
+    </action>
+    <action path="/view" type="org.apache.struts.actions.ForwardAction" parameter="/view.jsp"/>
+  </action-mappings>
+  <message-resources parameter="filebrowser.ApplicationResources"/>
+</struts-config>

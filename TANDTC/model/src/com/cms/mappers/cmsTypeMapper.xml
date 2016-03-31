@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.cms.mappers.cmsTypeMapper">
+
+	<resultMap type="cmsType" id="TypeResult">
+		<id property="typeId" column="TYPE_ID"/>
+		<result property="typeName" column="TYPE_NAME" />
+		<result property="typeDescription" column="TYPE_DESCRIPTION"/>
+                <result property="usePerspective" column="USE_PERSPECTIVE"/>
+                <result property="useCategory" column="USE_CATEGORY"/>
+                <result property="titleLabel" column="TITLE_LABEL"/>
+                <result property="contentLabel" column="CONTENT_LABEL"/>                
+                <result property="status" column="STATUS"/>
+		<result property="language" column="LANGUAGE"/>
+	</resultMap>
+	
+        <resultMap type="cmsTypeProperty" id="TypePropertiesResult">
+		<id property="id" column="ID"/>
+                <result property="typeId" column="TYPE_ID" />		
+                <result property="propertyLabel" column="PROPERTY_LABEL" />
+		<result property="orderNumber" column="ORDER_NUMBER"/>
+                <result property="isRequired" column="IS_REQUIRED"/>
+                <association property="cmsProperty" column="PROPERTY_ID" 
+select="getProperty"/>
+	</resultMap>
+        
+        <resultMap type="cmsItemUserRole" id="ItemUserRoleMap">
+		<id property="id" column="ID"/>
+                <result property="typeId" column="TYPE_ID" />		
+                <result property="userGroup" column="USER_GROUP" />
+                <result property="name" column="NAME" />
+		<result property="userRole" column="USER_ROLE"/>
+                <result property="isUser" column="IS_USER"/>
+	</resultMap>
+        
+        <select id="getProperty" parameterType="int" resultMap="com.cms.mappers.cmsPropertyMapper.PropertyResult">
+            SELECT * FROM
+            (
+            SELECT PROPERTY_ID,PROPERTY_LABEL,PROPERTY_NAME,PROPERTY_TYPE,RESOURCE_ID FROM cms_item_property
+            UNION
+            SELECT -1 AS PROPERTY_ID,'','title' AS PROPERTY_LABEL,'text',0 FROM dual
+            UNION 
+            SELECT -2 AS PROPERTY_ID,'','content' AS PROPERTY_LABEL,'editortext',0 FROM dual
+            UNION 
+            SELECT -3 AS PROPERTY_ID,'','perspectiveIds' AS PROPERTY_LABEL,'hidden',0 FROM dual
+            UNION 
+            SELECT -4 AS PROPERTY_ID,'','categoryId' AS PROPERTY_LABEL,'selectbox',0 FROM dual
+            UNION
+            SELECT -5 AS PROPERTY_ID,'','publishedDate' AS PROPERTY_LABEL,'fulldate',0 FROM dual
+            )WHERE PROPERTY_ID=#{propertyId}            
+        </select>
+	<select id="getAllTypes" resultMap="TypeResult" parameterType="String">
+            SELECT TYPE_ID,TYPE_NAME FROM CMS_ITEM_TYPE WHERE LANGUAGE=#{language} AND STATUS='active'
+  	</select>
+        
+        <select id="findTypes" resultMap="TypeResult">                   
+            SELECT * FROM CMS_ITEM_TYPE 
+            <trim prefix="WHERE" prefixOverrides="AND | OR">
+                <if test="param1 != null ">
+                    LANGUAGE = #{param1}
+                </if>
+                <if test="param2 != null">
+                    AND TYPE_NAME LIKE '%'||#{param2}||'%'
+                </if>
+            </trim>  
+            ORDER BY UPDATED_DATE
+        </select>
+        <select id="getTypesNumber" resultType="int">                   
+            SELECT count(*) FROM CMS_ITEM_TYPE 
+            <trim prefix="WHERE" prefixOverrides="AND | OR">
+                <if test="param1 != null ">
+                    LANGUAGE = #{param1}
+                </if>
+                <if test="param2 != null">
+                    AND TYPE_NAME LIKE '%'||#{param2}||'%'
+                </if>
+            </trim>              
+        </select>
+                
+        <select id="findAllItems" parameterType="int" resultMap="com.cms.mappers.cmsItemMapper.ItemResult">
+            SELECT ITEM_ID,TITLE FROM CMS_ITEMS WHERE TYPE_ID=#{typeId}
+  	</select>
+        <select id="findAllsItemNumber" parameterType="int" resultType="int">
+            SELECT count(*) FROM CMS_ITEMS WHERE TYPE_ID=#{typeId}
+  	</select>
+  	
+  	<select id="getTypeById" parameterType="int" resultMap="TypeResult">
+            SELECT * FROM CMS_ITEM_TYPE WHERE TYPE_ID=#{typeId}
+  	</select>
+  	
+  	<insert id="insertType" parameterType="cmsType">
+            <selectKey keyProperty="typeId" resultType="int" order="BEFORE">
+                SELECT CMS_ITEM_TYPE_SEQ.NEXTVAL FROM DUAL
+            </selectKey>
+  		INSERT INTO CMS_ITEM_TYPE(TYPE_ID,TITLE_LABEL,TYPE_NAME,TYPE_DESCRIPTION,USE_CATEGORY,USE_PERSPECTIVE,CONTENT_LABEL,STATUS,LANGUAGE)
+  		VALUES(#{typeId},#{titleLabel},#{typeName},#{typeDescription},#{useCategory},#{usePerspective},#{contentLabel},#{status},#{language})
+  	</insert>
+        
+  	<update id="updateType" parameterType="cmsType">
+            UPDATE CMS_ITEM_TYPE
+            SET
+                TITLE_LABEL=#{titleLabel},
+                TYPE_NAME=#{typeName},
+                TYPE_DESCRIPTION=#{typeDescription},
+                USE_CATEGORY=#{useCategory},
+                USE_PERSPECTIVE=#{usePerspective},
+                CONTENT_LABEL=#{contentLabel},
+                STATUS=#{status}
+            WHERE TYPE_ID=#{typeId}
+  	</update>
+  	
+  	<delete id="deleteType" parameterType="int">
+  		DELETE FROM CMS_ITEM_TYPE WHERE TYPE_ID=#{typeId}
+  	</delete>
+        <delete id="removeProperties" parameterType="int">
+  		DELETE FROM CMS_TYPE_PROPERTIES WHERE TYPE_ID=#{typeId}
+  	</delete>
+	
+	<select id="getItemPropertiesByType" parameterType="int" resultMap="TypePropertiesResult">
+            SELECT ID,PROPERTY_ID,PROPERTY_LABEL,IS_REQUIRED FROM cms_type_properties WHERE TYPE_ID=#{typeId}
+            ORDER BY ORDER_NUMBER ASC
+  	</select>
+        
+        <select id="getPropertiesList" parameterType="int" resultMap="com.cms.mappers.cmsPropertyMapper.PropertyResult">
+            SELECT PROPERTY_ID,PROPERTY_LABEL FROM cms_item_property WHERE LANGUAGE=(SELECT LANGUAGE FROM CMS_ITEM_TYPE WHERE TYPE_ID=#{typeId}) AND PROPERTY_ID NOT IN (SELECT PROPERTY_ID FROM cms_type_properties WHERE TYPE_ID=#{typeId})
+            ORDER BY NLSSORT(trim(upper(PROPERTY_LABEL)),'nls_sort=vietnamese') DESC
+  	</select>
+        
+        <select id="getOrder" resultType="int" parameterType="int">
+            SELECT max(order_number)+1 FROM CMS_TYPE_PROPERTIES WHERE TYPE_ID=#{typeId}
+  	</select>
+        
+        <select id="getTypePropertyById" resultMap="TypePropertiesResult" parameterType="int">
+            SELECT * FROM CMS_TYPE_PROPERTIES WHERE ID=#{id}
+  	</select>
+        
+        <select id="getUpTypeProperty" resultMap="TypePropertiesResult" parameterType="cmsTypeProperty">
+            SELECT * FROM CMS_TYPE_PROPERTIES WHERE TYPE_ID=#{typeId} AND ORDER_NUMBER=#{orderNumber}-1
+  	</select>
+        
+        <select id="getDownTypeProperty" resultMap="TypePropertiesResult" parameterType="cmsTypeProperty">
+            SELECT * FROM CMS_TYPE_PROPERTIES WHERE TYPE_ID=#{typeId} AND ORDER_NUMBER=#{orderNumber}+1
+  	</select>
+        
+        <insert id="insertTypeProperty" parameterType="cmsTypeProperty">
+            <selectKey keyProperty="id" resultType="int" order="BEFORE">
+                SELECT CMS_TYPE_PROPERTIES_SEQ.NEXTVAL FROM DUAL
+            </selectKey>
+  		INSERT INTO CMS_TYPE_PROPERTIES(ID,TYPE_ID,PROPERTY_ID,PROPERTY_LABEL,IS_REQUIRED,ORDER_NUMBER)
+  		VALUES(#{id},#{typeId},#{cmsProperty.propertyId},#{propertyLabel},#{isRequired},#{orderNumber})
+  	</insert>
+        
+        <insert id="insertDefaultProperty" parameterType="cmsTypeProperty">
+  		INSERT INTO CMS_TYPE_PROPERTIES(ID,TYPE_ID,PROPERTY_ID,PROPERTY_LABEL,ORDER_NUMBER)
+  		VALUES(#{id},#{typeId},#{cmsProperty.propertyId},#{propertyLabel},#{orderNumber})
+  	</insert>
+  	
+        <update id="updateOrder">
+            UPDATE CMS_TYPE_PROPERTIES
+            SET
+                ORDER_NUMBER=#{param2}
+            WHERE ID=#{param1}
+  	</update>
+        
+        <update id="updateRequired">
+            UPDATE CMS_TYPE_PROPERTIES
+            SET
+                IS_REQUIRED=#{param2}
+            WHERE ID=#{param1}
+  	</update>
+        
+  	<delete id="removeAllProperties" parameterType="int">        
+  		DELETE FROM CMS_TYPE_PROPERTIES WHERE TYPE_ID=#{typeId}
+  	</delete>
+        <delete id="removePropertyById" parameterType="int">
+            DELETE FROM CMS_TYPE_PROPERTIES WHERE ID=#{id}
+  	</delete>
+        <delete id="removeProperty">
+            DELETE FROM CMS_TYPE_PROPERTIES WHERE TYPE_ID=#{param1} AND PROPERTY_ID=#{param2}
+  	</delete>
+        <!--USER-GROUP START-->
+        <select id="getAllItemRole" resultMap="ItemUserRoleMap" parameterType="cmsItemUserRole">
+            SELECT * FROM CMS_ITEM_USER_ROLE WHERE IS_USER=#{isUser} AND TYPE_ID=#{typeId}
+        </select>
+        <insert id="inserItemRole" parameterType="cmsItemUserRole">
+            <selectKey keyProperty="id" resultType="int" order="BEFORE">
+                SELECT CMS_ITEM_USER_ROLE_SEQ.NEXTVAL FROM DUAL
+            </selectKey>
+            INSERT INTO CMS_ITEM_USER_ROLE(id,USER_GROUP,IS_USER,USER_ROLE,TYPE_ID)
+            VALUES(#{id},#{userGroup},#{isUser},#{userRole},#{typeId})
+        </insert>
+        <delete id="removeItemRole" parameterType="cmsItemUserRole">
+            DELETE FROM CMS_ITEM_USER_ROLE WHERE ID=#{id}
+        </delete>
+        <!--USER-GROUP END-->
+        
+</mapper>

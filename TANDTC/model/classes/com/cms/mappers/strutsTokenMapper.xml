@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.cms.mappers.strutsTokenMapper">
+
+	<resultMap type="strutsToken" id="StrutsTokenMap">
+		<id property="id" column="ID"/>
+		<result property="token" column="TOKEN" />
+	</resultMap>
+        
+	<select id="getStrutsToken" resultMap="StrutsTokenMap" parameterType="int">
+            SELECT * FROM STRUTS_TOKEN WHERE ID=#{id}
+  	</select>
+        
+  	<insert id="insertStrutsToken" parameterType="strutsToken">
+            <selectKey keyProperty="id" resultType="int" order="BEFORE">
+                SELECT STRUTS_TOKEN_ID_SEQ.NEXTVAL FROM DUAL
+            </selectKey>            
+            INSERT INTO STRUTS_TOKEN(ID,TOKEN)
+            VALUES(#{id},#{token})
+  	</insert>
+        
+  	<update id="updateStrutsToken" parameterType="strutsToken">
+            UPDATE STRUTS_TOKEN
+            SET
+                TOKEN=#{token}
+            WHERE ID=#{id}
+  	</update>
+        
+        <delete id="deleteStrutsToken" parameterType="int">
+            DELETE FROM STRUTS_TOKEN WHERE ID=#{id}
+        </delete>
+</mapper>

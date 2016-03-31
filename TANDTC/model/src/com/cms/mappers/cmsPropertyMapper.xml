@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.cms.mappers.cmsPropertyMapper">            
+	<resultMap type="cmsProperty" id="PropertyResult">
+		<id property="propertyId" column="PROPERTY_ID"/>
+		<result property="propertyLabel" column="PROPERTY_LABEL" />
+		<result property="propertyName" column="PROPERTY_NAME"/>
+                <result property="propertyType" column="PROPERTY_TYPE"/>
+		<result property="resourceId" column="RESOURCE_ID"/>
+                <result property="updatedDate" column="UPDATED_DATE"/>
+                <result property="language" column="LANGUAGE"/>
+	</resultMap>
+	
+	<select id="findAllProperty" resultMap="PropertyResult">
+            SELECT * FROM CMS_ITEM_PROPERTY
+  	</select>
+        
+        <select id="getPropertiesNumber" resultType="int">                   
+            SELECT count(*) FROM CMS_ITEM_PROPERTY 
+            <trim prefix="WHERE" prefixOverrides="AND | OR">
+                <if test="param1 != null ">
+                    LANGUAGE = #{param1}
+                </if>
+                <if test="param2 != null">
+                    AND PROPERTY_NAME LIKE '%'||#{param2}||'%'
+                </if>
+            </trim>            
+        </select>
+        
+        <select id="findProperties" resultMap="PropertyResult">                   
+            SELECT * FROM CMS_ITEM_PROPERTY 
+            <trim prefix="WHERE" prefixOverrides="AND | OR">
+                <if test="param1 != null ">
+                    LANGUAGE = #{param1}
+                </if>
+                <if test="param2 != null">
+                    AND PROPERTY_NAME LIKE '%'||#{param2}||'%'
+                </if>
+            </trim>     
+            ORDER BY UPDATED_DATE DESC
+        </select>
+        
+       <select id="getPropertyById" parameterType="int" resultMap="PropertyResult">
+            SELECT * FROM CMS_ITEM_PROPERTY WHERE PROPERTY_ID=#{propertyId}
+  	</select>
+  	
+  	<insert id="insertProperty" parameterType="cmsProperty">
+            <selectKey keyProperty="propertyId" resultType="int" order="BEFORE">
+                SELECT CMS_ITEM_PROPERTY_SEQ.NEXTVAL FROM DUAL
+            </selectKey>
+  		INSERT INTO CMS_ITEM_PROPERTY(PROPERTY_ID,PROPERTY_LABEL,PROPERTY_NAME,PROPERTY_TYPE,RESOURCE_ID,LANGUAGE,UPDATED_DATE)
+  		VALUES(#{propertyId},#{propertyLabel},#{propertyName},#{propertyType},#{resourceId},#{language},sysdate)
+  	</insert>
+        
+  	<update id="updateProperty" parameterType="cmsProperty">
+            UPDATE CMS_ITEM_PROPERTY 
+            SET
+               PROPERTY_LABEL=#{propertyLabel},
+               PROPERTY_NAME=#{propertyName},
+               PROPERTY_TYPE=#{propertyType},
+               RESOURCE_ID=#{resourceId}, 
+               UPDATED_DATE=sysdate
+            WHERE PROPERTY_ID=#{propertyId}
+  	</update>
+  	
+  	<delete id="deleteProperty" parameterType="int">
+  		DELETE FROM CMS_ITEM_PROPERTY WHERE PROPERTY_ID=#{propertyId}
+  	</delete>
+  	
+</mapper>

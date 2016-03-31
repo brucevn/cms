@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.cms.mappers.cmsPerspectiveMapper">
+
+	<resultMap type="cmsPerspective" id="PerspectiveResult">
+		<id property="perspectiveId" column="PERSPECTIVE_ID"/>
+		<result property="perspectiveName" column="PERSPECTIVE_NAME" />
+		<result property="parentId" column="PARENT_ID"/>
+                <result property="status" column="STATUS"/>
+                <result property="updatedDate" column="UPDATED_DATE"/>
+		<result property="language" column="LANGUAGE"/>
+	</resultMap>
+	
+	<select id="findAllPerspectives" resultMap="PerspectiveResult" parameterType="String">
+            SELECT * FROM CMS_PERSPECTIVE WHERE LANGUAGE=#{language} AND STATUS='active'
+  	</select>
+        
+        <select id="findPerspectives" resultMap="PerspectiveResult">                   
+            SELECT * FROM CMS_PERSPECTIVE 
+            <trim prefix="WHERE" prefixOverrides="AND | OR">
+                <if test="param1 != null ">
+                    LANGUAGE = #{param1}
+                </if>
+                <if test="param2 != null">
+                    AND PERSPECTIVE_NAME LIKE '%'||#{param2}||'%'
+                </if>
+                <if test="param3 != null">
+                    AND PARENT_ID = #{param3}
+                </if>
+            </trim>  
+            ORDER BY UPDATED_DATE DESC
+        </select>
+        
+        <select id="getPerspectivesNumber" resultType="int">                   
+            SELECT count(*) FROM CMS_PERSPECTIVE 
+            <trim prefix="WHERE" prefixOverrides="AND | OR">
+                <if test="param1 != null ">
+                    LANGUAGE = #{param1}
+                </if>
+                <if test="param2 != null">
+                    AND PERSPECTIVE_NAME LIKE '%'||#{param2}||'%'
+                </if>
+                <if test="param3 != null">
+                    AND PARENT_ID = #{param3}
+                </if>
+            </trim>            
+        </select>
+        
+        <select id="findAllSubPerspectives" resultMap="PerspectiveResult" parameterType="int" >
+            SELECT * FROM CMS_PERSPECTIVE WHERE PARENT_ID=#{parentId}
+  	</select>
+        
+        <select id="findAllItems" parameterType="int" resultMap="com.cms.mappers.cmsItemMapper.ItemResult">
+            SELECT ITEM_ID,TITLE FROM CMS_ITEMS JOIN CMS_ITEM_PERSPECTIVES USING(ITEM_ID) WHERE PERSPECTIVE_ID=#{perspectiveId}
+  	</select>
+        <select id="findAllItemsNumber" parameterType="int" resultType="int">
+            SELECT count(*) FROM CMS_ITEMS JOIN CMS_ITEM_PERSPECTIVES USING(ITEM_ID) WHERE PERSPECTIVE_ID=#{perspectiveId}
+  	</select>
+  	
+  	<select id="findPerspectiveById" parameterType="int" resultMap="PerspectiveResult">
+            SELECT * FROM CMS_PERSPECTIVE WHERE PERSPECTIVE_ID=#{perspectiveId}
+  	</select>
+  	
+  	<insert id="insertPerspective" parameterType="cmsPerspective">
+            <selectKey keyProperty="perspectiveId" resultType="int" order="BEFORE">
+                SELECT CMS_PERSPECTIVE_SEQ.NEXTVAL FROM DUAL
+            </selectKey>
+  		INSERT INTO CMS_PERSPECTIVE(PERSPECTIVE_ID,PERSPECTIVE_NAME,PARENT_ID,STATUS,LANGUAGE,UPDATED_DATE)
+  		VALUES(#{perspectiveId},#{perspectiveName},#{parentId},#{status},#{language},sysdate)
+  	</insert>
+        
+  	<update id="updatePerspective" parameterType="cmsPerspective">
+  		UPDATE CMS_PERSPECTIVE 
+  		<set>
+      		<if test="perspectiveName != null">PERSPECTIVE_NAME=#{perspectiveName},</if>
+      		<if test="parentId != null">PARENT_ID=#{parentId},</if>
+                <if test="status != null">STATUS=#{status},</if>
+      		<if test="language != null">LANGUAGE=#{language},</if>
+                UDPATED_DATE=sysdate
+      	</set>
+      	WHERE PERSPECTIVE_ID=#{perspectiveId}
+  	</update>
+  	
+  	<delete id="deletePerspective" parameterType="int">
+  		DELETE FROM CMS_PERSPECTIVE WHERE PERSPECTIVE_ID=#{perspectiveId}
+  	</delete>
+  	
+</mapper>

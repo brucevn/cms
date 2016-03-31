@@ -1,0 +1,18 @@
+#browser1 a{
+	text-decoration:underline;
+	color:#000066;
+}
+#browser1 a:hover{
+	color:red;
+	font-weight:bold;
+}
+.sysadmin_back{
+	text-align:right;
+	width:100%;	
+	line-height:20px;
+}
+.sysadmin_back a{
+	text-decoration:underline;
+	color:#000033;
+	margin-right:10px;
+}

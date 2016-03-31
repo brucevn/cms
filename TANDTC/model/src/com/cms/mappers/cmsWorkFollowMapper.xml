@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.cms.mappers.cmsWorkFollowMapper">
+
+	<resultMap type="cmsWorkFollow" id="WorkFollowMap">
+		<id property="id" column="ID"/>
+		<result property="name" column="NAME" />
+                <result property="description" column="DESCRIPTION" />
+                <collection property="steps" column="id" select="getAllSteps"/>
+	</resultMap>
+        <resultMap type="cmsWorkFollowStep" id="WorkFollowStepMap">
+		<id property="id" column="ID"/>
+		<result property="stepName" column="STEP_NAME" />
+                <result property="orderNumber" column="ORDER_NUMBER" />
+                <association property="workFollow" column="WORK_FOLLOW_ID" select="getWorkFollowById"/>
+                <collection property="owners" column="id" select="getAllOwners"/>
+	</resultMap>
+        <resultMap type="cmsStepOwner" id="StepOwnerMap">
+		<id property="id" column="ID"/>
+		<result property="owner" column="OWNER" />
+                <result property="ownerType" column="OWNER_TYPE" />
+                <result property="order" column="ORDER_NUMBER" />
+                <association property="step" column="STEP_ID" select="getStepById"/>                
+	</resultMap>
+        
+	<select id="getWorkFollowById" resultMap="WorkFollowMap" parameterType="int">
+            SELECT * FROM CMS_WORK_FOLLOW WHERE ID=#{id}
+  	</select>
+        <select id="getStepById" resultMap="WorkFollowStepMap" parameterType="int">
+            SELECT * FROM CMS_WORK_FOLLOW_STEPS WHERE ID=#{id}
+  	</select>
+        <select id="getStepOwnerById" resultMap="StepOwnerMap" parameterType="int">
+            SELECT * FROM CMS_STEP_OWNERS WHERE ID=#{id}
+  	</select>
+        
+        <select id="getAllWorkFollows" resultMap="WorkFollowMap">
+            SELECT * FROM CMS_WORK_FOLLOW
+             <trim prefix="WHERE" prefixOverrides="AND | OR">
+                <if test="param1 != null">
+                    NAME LIKE '%'||#{param1}||'%'
+                </if>
+            </trim>
+  	</select>        
+        <select id="getAllSteps" resultMap="WorkFollowStepMap" parameterType="int">
+            SELECT * FROM CMS_WORK_FOLLOW_STEPS WHERE WORK_FOLLOW_ID=#{workFollowId}
+  	</select>
+        <select id="getAllOwners" resultMap="StepOwnerMap" parameterType="int">
+            SELECT * FROM CMS_STEP_OWNERS WHERE ID=#{stepId}
+  	</select>
+        
+  	<insert id="insertWorkFollow" parameterType="cmsWorkFollow">
+            <selectKey keyProperty="id" resultType="int" order="BEFORE">
+                SELECT CMS_WORK_FOLLOW_SEQ.NEXTVAL FROM DUAL
+            </selectKey>            
+            INSERT INTO CMS_WORK_FOLLOW(ID,NAME,DESCRIPTION)
+            VALUES(#{id},#{name},#{description})
+  	</insert>
+        
+  	<update id="updateWorkFollow" parameterType="cmsWorkFollow">
+            UPDATE CMS_WORK_FOLLOW
+            SET
+                NAME=#{name},
+                DESCRIPTION=#{description}
+            WHERE ID=#{id}
+  	</update>
+        
+        <delete id="deleteWorkFollow" parameterType="cmsWorkFollow">
+            DELETE FROM CMS_WORK_FOLLOW WHERE ID=#{id}
+        </delete>
+        
+        <insert id="insertStep" parameterType="cmsWorkFollowStep">
+            <selectKey keyProperty="id" resultType="int" order="BEFORE">
+                SELECT CMS_WORK_FOLLOW_STEPS_SEQ.NEXTVAL FROM DUAL
+            </selectKey>            
+            INSERT INTO CMS_WORK_FOLLOW_STEPS(ID,STEP_NAME,WORK_FOLLOW_ID,ORDER_NUMBER)
+            VALUES(#{id},#{stepName},#{workFollow.id},#{orderNumber})
+  	</insert>
+        
+  	<update id="updateStep" parameterType="cmsWorkFollowStep">
+            UPDATE CMS_WORK_FOLLOW_STEPS
+            SET
+                STEP_NAME=#{stepName}                
+            WHERE ID=#{id}
+  	</update>
+        
+        <delete id="deleteStep" parameterType="cmsWorkFollow">
+            DELETE FROM CMS_WORK_FOLLOW_STEPS WHERE ID=#{id}
+        </delete>
+        
+        <insert id="insertStepOwner" parameterType="cmsStepOwner">
+            <selectKey keyProperty="id" resultType="int" order="BEFORE">
+                SELECT CMS_STEP_OWNER_SEQ.NEXTVAL FROM DUAL
+            </selectKey>            
+            INSERT INTO CMS_STEP_OWNER(ID,OWNER,OWNER_TYPE,STEP_ID,ORDER_NUMBER)
+            VALUES(#{id},#{owner},#{owner_type},#{step.id},#{order})
+  	</insert>
+        
+  	<update id="updateStepOwner" parameterType="cmsStepOwner">
+            UPDATE CMS_STEP_OWNERS
+            SET
+                OWNER=#{owner},
+                OWNER_TYPE=#{ownerType}                
+            WHERE ID=#{id}
+  	</update>
+        
+        <delete id="deleteStepOwner" parameterType="cmsStepOwner">
+            DELETE FROM CMS_STEP_OWNERS WHERE ID=#{id}
+        </delete>
+</mapper>

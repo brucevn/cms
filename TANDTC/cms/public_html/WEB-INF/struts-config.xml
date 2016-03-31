@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.2//EN" "http://struts.apache.org/dtds/struts-config_1_2.dtd">
+<struts-config>  
+  <form-beans>
+    <form-bean name="CategoryForm" type="com.cms.struts.category.CmsCategoryForm"/>
+    <form-bean name="PerspectiveForm" type="com.cms.struts.perspective.CmsPerspectiveForm"/>
+    <form-bean name="PropertyForm" type="com.cms.struts.property.CmsPropertyForm"/>
+    <form-bean name="TypeForm" type="com.cms.struts.type.CmsTypeForm"/>
+    <form-bean name="ItemForm" type="com.cms.struts.item.CmsItemForm"/>
+    <form-bean name="LdapForm" type="com.cms.struts.ldap.CmsLdapForm"/>
+    <form-bean name="WorkFollowForm" type="com.cms.struts.workfollow.CmsWorkFollowForm"/>
+    <form-bean name="WorkFollowStepForm" type="com.cms.models.CmsWorkFollowStep"/>
+    <form-bean name="StepOwnerForm" type="com.cms.models.CmsStepOwner"/>
+  </form-beans>
+  <action-mappings>
+    <action path="/category" type="com.cms.struts.category.CmsCategoryAction" parameter="method" scope="request" name="CategoryForm">
+        <forward name="home" path="/Category/main.jsp"/>        
+        <forward name="form" path="/Category/form.jsp"/>
+    </action>
+    <action path="/perspective" type="com.cms.struts.perspective.CmsPerspectiveAction" parameter="method" scope="request" name="PerspectiveForm">
+        <forward name="home" path="/Perspective/main.jsp"/>        
+        <forward name="form" path="/Perspective/form.jsp"/>
+    </action>
+    <action path="/property" type="com.cms.struts.property.CmsPropertyAction" parameter="method" scope="request" name="PropertyForm">
+        <forward name="home" path="/Property/main.jsp"/>        
+        <forward name="form" path="/Property/form.jsp"/>
+    </action>
+    <action path="/type" type="com.cms.struts.type.CmsTypeAction" parameter="method" scope="request" name="TypeForm">
+        <forward name="home" path="/Type/main.jsp"/>        
+        <forward name="form" path="/Type/form.jsp"/>
+        <forward name="properties" path="/Type/properties.jsp"/>
+        <forward name="itemRole" path="/Type/itemRole.jsp"/>
+    </action>
+    <action path="/item" type="com.cms.struts.item.CmsItemAction" parameter="method" scope="request" name="ItemForm">
+        <forward name="home" path="/Item/main.jsp"/>
+        <forward name="form" path="/Item/form.jsp"/>
+        <forward name="ChooseType" path="/Item/ChooseType.jsp"/>
+        <forward name="dataupdated" path="/Item/dataupdated.jsp"/>
+    </action>
+    <action path="/ldap" type="com.cms.struts.ldap.CmsLdapAction" scope="request" name="LdapForm">
+        <forward name="home" path="/Ldap/ldap.jsp"/>
+    </action>
+    <action path="/workfollow" type="com.cms.struts.workfollow.CmsWorkFollowAction"  parameter="method" scope="request" name="WorkFollowForm">
+        <forward name="home" path="/WorkFollow/main.jsp"/>
+        <forward name="form" path="/WorkFollow/form.jsp"/>
+    </action>
+    <action path="/step" type="com.cms.struts.workfollow.CmsWorkFollowAction"  parameter="method" scope="request" name="WorkFollowStepForm">
+        <forward name="home" path="/WorkFollow/step.jsp"/>
+    </action>
+    <action path="/stepOwner" type="com.cms.struts.workfollow.CmsWorkFollowAction"  parameter="method" scope="request" name="StepOwnerForm">
+        <forward name="home" path="step.do"/>
+    </action>
+  </action-mappings>
+  <message-resources parameter="com.cms.application"/>
+</struts-config>

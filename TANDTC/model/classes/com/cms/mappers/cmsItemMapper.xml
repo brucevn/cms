@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cms.mappers.cmsItemMapper">
+        <resultMap type="cmsItem" id="ItemResult">
+                <id property="itemId" column="ITEM_ID"/>
+                <result property="title" column="TITLE"/>
+                <result property="content" column="CONTENT"/>
+                <result property="categoryId" column="CATEGORY_ID"/>
+                <result property="typeId" column="TYPE_ID"/>
+                <result property="masterId" column="MASTER_ID"/>
+                <result property="version" column="VERSION"/>
+                <result property="owner" column="OWNER"/>
+                <result property="createdDate" column="CREATED_DATE"/>
+                <result property="updater" column="UPDATER"/>
+                <result property="updatedDate" column="UPDATED_DATE"/>
+                <result property="status" column="STATUS"/>
+                <result property="publishDate" column="PUBLISH_DATE"/>
+                <result property="language" column="LANGUAGE"/>
+        </resultMap>
+        
+        <resultMap type="cmsPropertyValue" id="ItemPropertyValue">
+                <id property="id" column="ID"/>
+                <result property="itemId" column="ITEM_ID"/>
+                <result property="propertyId" column="PROPERTY_ID"/>
+                <result property="intValue" column="INT_VALUE"/>
+                <result property="strValue" column="STRING_VALUE"/>                
+                <result property="dateValue" column="DATE_VALUE"/>
+        </resultMap>   
+        
+         <resultMap type="cmsItemPerspective" id="ItemPerspectivesResult">
+		<id property="id" column="ID"/>
+                <id property="perspectiveId" column="PERSPECTIVE_ID"/>
+		<result property="itemId" column="ITEM_ID" />
+		<result property="orderNumber" column="ORDER_NUMBER"/>                
+	</resultMap>
+        
+        
+         <resultMap type="cmsItemFile" id="ItemFile">
+		<id property="id" column="ID"/>
+                <id property="fileId" column="FILE_ID"/>
+		<result property="itemId" column="ITEM_ID" />
+		<result property="orderNumber" column="ORDER_NUMBER"/>                
+	</resultMap>
+        
+        <select id="getAllPropertyNames" parameterType="int">
+            SELECT PROPERTY_NAME FROM CMS_ITEM_PROPERTIES JOIN CMS_TYPE_PROPERTIES USING(PROPERTY_ID) WHERE TYPE_ID=#{typeId} order by ORDER_NUMBER
+        </select>
+        <insert id="insertItem" parameterType="cmsItem">
+                <selectKey keyProperty="itemId" resultType="int" order="BEFORE">SELECT
+                                                                                CMS_ITEM_SEQ.NEXTVAL
+                                                                                FROM
+                                                                                DUAL</selectKey>
+                INSERT INTO
+                CMS_ITEM(ITEM_ID,TITLE,CONTENT,CATEGORY_ID,TYPE_ID,MASTER_ID,VERSION,OWNER,CREATED_DATE,UPDATER,UPDATED_DATE,STATUS,LANGUAGE,PUBLISH_DATE)
+                VALUES(#{itemId},#{title},#{content},#{categoryId},#{typeId},#{masterId},#{version},#{owner},sysdate,#{updater},sysdate,#{status},#{language},nvl(#{publishDate},null))
+        </insert>
+        <update id="updateItem" parameterType="cmsItem">
+                UPDATE CMS_ITEM
+                <set>
+                TITLE=#{title},
+                CONTENT =#{content}, 
+                CATEGORY_ID =#{categoryId}, 
+                TYPE_ID = #{typeId},
+                <if test="publishDate!=null">PUBLISH_DATE=#{publishDate},</if>
+                <if test="publishDate==null">PUBLISH_DATE=NULL,</if>
+                UPDATER = #{updater},
+                UPDATED_DATE = sysdate,
+                STATUS =#{status}                                
+                </set>
+                WHERE ITEM_ID=#{itemId}
+                
+        </update>
+        <delete id="deleteItem" parameterType="int">
+  		DELETE FROM CMS_ITEM WHERE ITEM_ID=#{itemId}
+  	</delete>
+        
+         <select id="findAllItems" resultMap="ItemResult">
+            SELECT DISTINCT ITEM_ID,TITLE,OWNER,UPDATER,UPDATED_DATE,STATUS,PUBLISH_DATE FROM CMS_ITEM
+            LEFT JOIN CMS_ITEM_PERSPECTIVES USING(ITEM_ID)
+            WHERE VERSION=0
+            <if test="param1 != null ">
+                AND LANGUAGE = #{param1}
+            </if>
+            <if test="param2 != null">
+                AND TITLE LIKE '%'||#{param2}||'%'
+            </if>                
+            <if test="param3 != null">
+                AND OWNER = #{param3}
+            </if>
+            <if test="param4 > 0">
+                AND CATEGORY_ID = #{param4}
+            </if>
+            <if test="param5 > 0">
+                AND TYPE_ID = #{param5}
+            </if>
+            <if test="param6 >0">
+                AND PERSPECTIVE_ID = #{param6}
+            </if>
+            <if test="param7 != null">
+                AND PUBLISH_DATE >= to_date(#{param7},'dd/mm/yyyy')
+            </if>
+            <if test="param8 != null">
+                AND to_date(#{param8},'dd/mm/yyyy')>=PUBLISH_DATE
+            </if>
+  	</select>
+        
+        <select id="getFindAllItemsNumber" resultType="int">
+            SELECT COUNT(DISTINCT ITEM_ID) FROM CMS_ITEM
+                LEFT JOIN CMS_ITEM_PERSPECTIVES USING(ITEM_ID)
+            WHERE VERSION=0
+            <if test="param1 != null ">
+                AND LANGUAGE = #{param1}
+            </if>
+            <if test="param2 != null">
+                AND TITLE LIKE '%'||#{param2}||'%'
+            </if>                
+            <if test="param3 != null">
+                AND OWNER = #{param3}
+            </if>
+            <if test="param4 > 0">
+                AND CATEGORY_ID = #{param4}
+            </if>
+            <if test="param5 > 0">
+                AND TYPE_ID = #{param5}
+            </if>
+            <if test="param6 >0">
+                AND PERSPECTIVE_ID = #{param6}
+            </if>
+            <if test="param7 != null">
+                AND PUBLISH_DATE >= to_date(#{param7},'dd/mm/yyyy')
+            </if>
+            <if test="param8 != null">
+                AND to_date(#{param8},'dd/mm/yyyy')>=PUBLISH_DATE
+            </if>
+  	</select>
+        <select id="getMasterId" resultType="int">
+            select CMS_ITEM_master_seq.nextval from dual
+        </select>
+        <select id="getItemById" resultMap="ItemResult" parameterType="int">
+            SELECT * FROM CMS_ITEM WHERE ITEM_ID=#{itemId}
+        </select>
+        
+        <select id="getPropertyNumberValue" resultMap="ItemPropertyValue">
+            SELECT ID,ITEM_ID,PROPERTY_ID,PROPERTY_VALUE AS INT_VALUE FROM PROPERTY_VALUE_NUMBER WHERE ITEM_ID=#{param1} AND PROPERTY_ID=#{param2}
+        </select>
+        <insert id="insertPropertyNumberValue" parameterType="cmsPropertyValue">
+            <selectKey keyProperty="id" resultType="int" order="BEFORE">
+                SELECT PROPERTY_VALUE_NUMBER_SEQ.NEXTVAL FROM DUAL
+            </selectKey>
+            INSERT INTO PROPERTY_VALUE_NUMBER(ID,ITEM_ID,PROPERTY_ID,PROPERTY_VALUE)
+            VALUES(#{id},#{itemId},#{propertyId},#{intValue})
+        </insert>
+        <update id="updatePropertyNumberValue" parameterType="cmsPropertyValue">
+            UPDATE PROPERTY_VALUE_NUMBER
+            SET
+                PROPERTY_VALUE=#{intValue}
+            WHERE ITEM_ID=#{itemId} AND PROPERTY_ID=#{propertyId}
+        </update>
+        <delete id="deletePropertyNumberValue" parameterType="int">
+            DELETE FROM PROPERTY_VALUE_NUMBER WHERE ITEM_ID=#{itemId}
+        </delete>
+        <select id="getPropertyTextValue" resultMap="ItemPropertyValue">
+            SELECT ID,ITEM_ID,PROPERTY_ID,PROPERTY_VALUE AS STRING_VALUE FROM PROPERTY_VALUE_TEXT WHERE ITEM_ID=#{param1} AND PROPERTY_ID=#{param2}
+        </select>
+        <insert id="insertPropertyTextValue" parameterType="cmsPropertyValue">
+            <selectKey keyProperty="id" resultType="int" order="BEFORE">
+                SELECT PROPERTY_VALUE_TEXT_SEQ.NEXTVAL FROM DUAL
+            </selectKey>
+            INSERT INTO PROPERTY_VALUE_Text(ID,ITEM_ID,PROPERTY_ID,PROPERTY_VALUE)
+            VALUES(#{id},#{itemId},#{propertyId},#{strValue})
+        </insert>
+        <update id="updatePropertyTextValue" parameterType="cmsPropertyValue">
+            UPDATE PROPERTY_VALUE_TEXT
+            SET
+                PROPERTY_VALUE=#{strValue}
+            WHERE ITEM_ID=#{itemId} AND PROPERTY_ID=#{propertyId}
+        </update>
+        <delete id="deletePropertyTextValue" parameterType="int">
+            DELETE FROM PROPERTY_VALUE_TEXT WHERE ITEM_ID=#{itemId}
+        </delete>
+        <select id="getPropertyLongTextValue" resultMap="ItemPropertyValue">
+            SELECT ID,ITEM_ID,PROPERTY_ID,PROPERTY_VALUE AS STRING_VALUE FROM PROPERTY_VALUE_LONGTEXT WHERE ITEM_ID=#{param1} AND PROPERTY_ID=#{param2}
+        </select>
+        <insert id="insertPropertyLongTextValue" parameterType="cmsPropertyValue">
+            <selectKey keyProperty="id" resultType="int" order="BEFORE">
+                SELECT PROPERTY_VALUE_LONGTEXT_SEQ.NEXTVAL FROM DUAL
+            </selectKey>
+            INSERT INTO PROPERTY_VALUE_LONGTEXT(ID,ITEM_ID,PROPERTY_ID,PROPERTY_VALUE)
+            VALUES(#{id},#{itemId},#{propertyId},#{strValue})
+        </insert>
+        <update id="updatePropertyLongTextValue" parameterType="cmsPropertyValue">
+            UPDATE PROPERTY_VALUE_LONGTEXT
+            SET
+                PROPERTY_VALUE=#{strValue}
+            WHERE ITEM_ID=#{itemId} AND PROPERTY_ID=#{propertyId}
+        </update>
+        <delete id="deletePropertyLongTextValue" parameterType="int">
+            DELETE FROM PROPERTY_VALUE_LONGTEXT WHERE ITEM_ID=#{itemId}
+        </delete>
+        <select id="getPropertySimpleDateValue" resultMap="ItemPropertyValue">
+            SELECT ID,ITEM_ID,PROPERTY_ID,to_char(PROPERTY_VALUE,'dd/mm/yyyy') AS STRING_VALUE FROM PROPERTY_VALUE_DATE WHERE ITEM_ID=#{param1} AND PROPERTY_ID=#{param2}
+        </select>
+        <select id="getPropertyFullDateValue" resultMap="ItemPropertyValue">
+            SELECT ID,ITEM_ID,PROPERTY_ID,to_char(PROPERTY_VALUE,'dd/mm/yyyy hh:MM:ss') AS STRING_VALUE FROM PROPERTY_VALUE_DATE WHERE ITEM_ID=#{param1} AND PROPERTY_ID=#{param2}
+        </select>
+        <insert id="insertPropertyDateValue" parameterType="cmsPropertyValue">
+            <selectKey keyProperty="id" resultType="int" order="BEFORE">
+                SELECT PROPERTY_VALUE_DATE_SEQ.NEXTVAL FROM DUAL
+            </selectKey>
+            INSERT INTO PROPERTY_VALUE_DATE(ID,ITEM_ID,PROPERTY_ID,PROPERTY_VALUE)
+            VALUES(#{id},#{itemId},#{propertyId},#{dateValue})
+        </insert>
+        <update id="updatePropertyDateValue" parameterType="cmsPropertyValue">
+            UPDATE PROPERTY_VALUE_DATE
+            SET
+                PROPERTY_VALUE=#{dateValue}
+            WHERE ITEM_ID=#{itemId} AND PROPERTY_ID=#{propertyId}
+        </update>
+       <delete id="deletePropertyDateValue" parameterType="int">
+            DELETE FROM PROPERTY_VALUE_DATE WHERE ITEM_ID=#{itemId}
+        </delete>
+	<!--Start Item perspectives-->
+	<select id="getAllItemPerspectives" resultMap="com.cms.mappers.cmsPerspectiveMapper.PerspectiveResult" parameterType="int">
+            SELECT PERSPECTIVE_ID,PERSPECTIVE_NAME FROM CMS_ITEM_PERSPECTIVES JOIN CMS_PERSPECTIVE USING(PERSPECTIVE_ID)
+            WHERE ITEM_ID=#{itemId} ORDER BY ORDER_NUMBER ASC
+  	</select>
+        
+        <select id="getSelectablePerspectives" resultMap="com.cms.mappers.cmsPerspectiveMapper.PerspectiveResult" parameterType="List">
+             SELECT PERSPECTIVE_ID,PERSPECTIVE_NAME FROM CMS_PERSPECTIVE 
+             WHERE PERSPECTIVE_ID NOT IN 
+                <foreach item="persid" collection="perspectiveIds" 
+                    open="(" separator="," close=")">
+                    #{persid}
+                </foreach>
+            ORDER BY PERSPECTIVE_NAME ASC
+        </select>
+  	
+  	<insert id="insertItemPerspective" parameterType="cmsItemPerspective">
+            <selectKey keyProperty="id" resultType="int" order="BEFORE">
+                SELECT CMS_ITEM_PERSPECTIVES_SEQ.NEXTVAL FROM DUAL
+            </selectKey>
+  		INSERT INTO CMS_ITEM_PERSPECTIVES(ID,PERSPECTIVE_ID,ITEM_ID,ORDER_NUMBER)
+  		VALUES(#{id},#{perspectiveId},#{itemId},#{orderNumber})
+  	</insert>
+  	
+  	<delete id="deleteItemPerspective" parameterType="int">
+  		DELETE FROM CMS_ITEM_PERSPECTIVES WHERE ID=#{id}
+  	</delete>
+        
+        <delete id="deleteAllItemPerspectives" parameterType="int">
+  		DELETE FROM CMS_ITEM_PERSPECTIVES WHERE ITEM_ID=#{itemId}
+  	</delete>
+        <!--End Item perspective-->
+        <!--Start Itemm Fiel-->
+        <select id="getAllItemFiles" resultMap="com.cms.mappers.cmsFileMapper.FileResult" parameterType="int">
+            SELECT FILE_ID,FILE_NAME FROM CMS_ITEM_FILES JOIN CMS_FILE USING(FILE_ID)
+            WHERE ITEM_ID=#{itemId} ORDER BY ORDER_NUMBER ASC
+  	</select>        
+  	
+  	<insert id="insertItemFile" parameterType="cmsItemFile">
+            <selectKey keyProperty="id" resultType="int" order="BEFORE">
+                SELECT CMS_ITEM_FILES_SEQ.NEXTVAL FROM DUAL
+            </selectKey>
+  		INSERT INTO CMS_ITEM_FILES(ID,FILE_ID,ITEM_ID,ORDER_NUMBER)
+  		VALUES(#{id},#{fileId},#{itemId},#{orderNumber})
+  	</insert>
+  	
+  	<delete id="deleteItemFile" parameterType="int">
+  		DELETE FROM CMS_ITEM_FILES WHERE ID=#{id}
+  	</delete>
+        
+    <delete id="deleteAllItemFiles" parameterType="int">
+  		DELETE FROM CMS_ITEM_FILES WHERE ITEM_ID=#{itemId}
+  	</delete>
+        <!--End Item Files-->
+</mapper>

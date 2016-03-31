@@ -1,0 +1,11 @@
+CREATE TABLE CMS_ITEM_PERSPECTIVES
+(
+    ID              NUMBER(8,2),
+    ITEM_ID         NUMBER(8,2),
+    PERSPECTIVE_ID  NUMBER(8,2),
+    ORDER_NUMBER    NUMBER(8,2)
+)
+;
+CREATE SEQUENCE cms_item_perspectives_seq START WITH 1 INCREMENT BY 1;
+
+

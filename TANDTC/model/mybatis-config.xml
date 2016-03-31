@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>	
+    
+	<settings>
+		  <setting name="cacheEnabled" value="true"/>
+		  <setting name="lazyLoadingEnabled" value="false"/>
+		  <setting name="multipleResultSetsEnabled" value="true"/>
+		  <setting name="useColumnLabel" value="true"/>
+		  <setting name="useGeneratedKeys" value="false"/>
+		  <setting name="autoMappingBehavior" value="PARTIAL"/>
+		  <setting name="defaultExecutorType" value="SIMPLE"/>
+		  <setting name="defaultStatementTimeout" value="25000"/>
+		  <setting name="safeRowBoundsEnabled" value="false"/>
+		  <setting name="mapUnderscoreToCamelCase" value="false"/>
+		  <setting name="localCacheScope" value="SESSION"/>
+		  <setting name="jdbcTypeForNull" value="OTHER"/>
+		  <setting name="lazyLoadTriggerMethods" value="equals,clone,hashCode,toString"/>
+                  <setting name="logImpl" value="LOG4J"/>
+	</settings>
+	
+	  <typeAliases>
+	  	<typeAlias alias="cmsCategory" type="com.cms.models.CmsCategory"/>
+                <typeAlias alias="cmsPerspective" type="com.cms.models.CmsPerspective"/>
+                <typeAlias alias="cmsItem" type="com.cms.models.CmsItem"/>
+                <typeAlias alias="cmsItemFile" type="com.cms.models.CmsItemFiles"/>
+                <typeAlias alias="cmsItemPerspective" type="com.cms.models.CmsItemPerspective"/>
+                <typeAlias alias="cmsType" type="com.cms.models.CmsType"/>
+                <typeAlias alias="cmsProperty" type="com.cms.models.CmsProperty"/>
+                <typeAlias alias="cmsTypeProperty" type="com.cms.models.CmsTypeProperty"/>
+                <typeAlias alias="strutsToken" type="com.cms.models.StrutsToken"/>
+                <typeAlias alias="cmsFile" type="com.cms.models.CmsFile"/>
+                <typeAlias alias="cmsFolder" type="com.cms.models.CmsFolder"/>
+                <typeAlias alias="cmsPropertyValue" type="com.cms.models.CmsPropertyValue"/>                
+                <typeAlias alias="cmsItemUserRole" type="com.cms.models.CmsItemUserRole"/>  
+                <typeAlias alias="cmsWorkFollow" type="com.cms.models.CmsWorkFollow"/>  
+                <typeAlias alias="cmsWorkFollowStep" type="com.cms.models.CmsWorkFollowStep"/>
+                <typeAlias alias="cmsStepOwner" type="com.cms.models.CmsStepOwner"/>
+	  </typeAliases> 
+          
+	 <environments default="development">
+	    <environment id="development">
+	      <transactionManager type="JDBC"/>
+	      <dataSource type="POOLED">
+	        <property name="driver" value="oracle.jdbc.OracleDriver"/>
+	        <property name="url" value="jdbc:oracle:thin:@trungbx.home.vn:1521:infra"/>
+	        <property name="username" value="trungbx"/>
+	        <property name="password" value="trungbx"/>
+	      </dataSource>
+	    </environment>
+            <environment id="development2">
+	      <transactionManager type="JDBC"/>
+	      <dataSource type="POOLED">
+	        <property name="driver" value="oracle.jdbc.OracleDriver"/>
+	        <property name="url" value="jdbc:oracle:thin:@trungbx.dev.com:1521:orcl"/>
+	        <property name="username" value="trungbx"/>
+	        <property name="password" value="trungbx"/>
+	      </dataSource>
+	    </environment>
+	    <environment id="production">
+	      <transactionManager type="JDBC"/>
+	      <dataSource type="JNDI">
+	        <property name="data_source" value="java:jdbc/tandtc"/>
+	      </dataSource>
+	    </environment>	    
+	  </environments>	  
+	  <mappers>
+	    <package name="com.cms.mappers"/>
+	  </mappers>  	
+</configuration>

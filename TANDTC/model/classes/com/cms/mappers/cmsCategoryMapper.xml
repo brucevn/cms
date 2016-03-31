@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.cms.mappers.cmsCategoryMapper">
+
+	<resultMap type="cmsCategory" id="CategoryResult">
+		<id property="categoryId" column="CATEGORY_ID"/>
+		<result property="categoryName" column="CATEGORY_NAME" />
+		<result property="parentId" column="PARENT_ID"/>
+                <result property="status" column="STATUS"/>
+                <result property="updatedDate" column="UPDATED_DATE"/>
+		<result property="language" column="LANGUAGE"/>
+	</resultMap>
+        
+        <select id="findAllCategories" resultMap="CategoryResult" parameterType="String">
+            SELECT * FROM CMS_CATEGORY WHERE LANGUAGE=#{language} AND STATUS='active'
+  	</select>
+        
+        <select id="findCategories" resultMap="CategoryResult">                   
+            SELECT * FROM CMS_CATEGORY 
+            <trim prefix="WHERE" prefixOverrides="AND | OR">
+                <if test="param1 != null ">
+                    LANGUAGE = #{param1}
+                </if>
+                <if test="param2 != null">
+                    AND CATEGORY_NAME LIKE '%'||#{param2}||'%'
+                </if>
+                <if test="param3 != null">
+                    AND PARENT_ID = #{param3}
+                </if>
+            </trim>           
+            ORDER BY UPDATED_DATE DESC
+        </select>
+        
+        <select id="getFindCategoriesNumber" resultType="int">                   
+            SELECT count(*) FROM CMS_CATEGORY 
+            <trim prefix="WHERE" prefixOverrides="AND | OR">
+                <if test="param1 != null ">
+                    LANGUAGE = #{param1}
+                </if>
+                <if test="param2 != null">
+                    AND CATEGORY_NAME LIKE '%'||#{param2}||'%'
+                </if>
+                <if test="param3 != null">
+                    AND PARENT_ID = #{param3}
+                </if>
+            </trim>            
+        </select>
+        
+        <select id="findAllSubCategories" resultMap="CategoryResult" parameterType="int" >
+            SELECT * FROM CMS_CATEGORY WHERE PARENT_ID=#{parentId}
+  	</select>
+        
+        <select id="findAllItems" parameterType="int" resultMap="com.cms.mappers.cmsItemMapper.ItemResult">
+            SELECT ITEM_ID,TITLE FROM CMS_ITEMS WHERE CATEGORY_ID=#{categoryId}
+  	</select>
+  	
+  	<select id="findCategoryById" parameterType="int" resultMap="CategoryResult">
+            SELECT * FROM CMS_CATEGORY WHERE CATEGORY_ID=#{categoryId}
+  	</select>
+  	
+  	<insert id="insertCategory" parameterType="cmsCategory">
+            <selectKey keyProperty="categoryId" resultType="int" order="BEFORE">
+                SELECT CMS_CATEGORY_SEQ.NEXTVAL FROM DUAL
+            </selectKey>
+  		INSERT INTO CMS_CATEGORY(CATEGORY_ID,CATEGORY_NAME,PARENT_ID,STATUS,LANGUAGE,UPDATED_DATE)
+  		VALUES(#{categoryId},#{categoryName},#{parentId},#{status},#{language},sysdate)
+  	</insert>
+        
+  	<update id="updateCategory" parameterType="cmsCategory">
+  		UPDATE CMS_CATEGORY 
+  		<set>
+                    <if test="categoryName != null">CATEGORY_NAME=#{categoryName},</if>
+                    <if test="parentId != null">PARENT_ID=#{parentId},</if>
+                    <if test="language != null">LANGUAGE=#{language},</if>
+                    <if test="status != null">STATUS=#{status},</if>
+                    UPDATED_DATE=sysdate
+                </set>
+      	WHERE CATEGORY_ID=#{categoryId}
+  	</update>
+  	
+  	<delete id="deleteCategory" parameterType="int">
+  		DELETE FROM CMS_CATEGORY WHERE CATEGORY_ID=#{categoryId}
+  	</delete>
+  	
+</mapper>

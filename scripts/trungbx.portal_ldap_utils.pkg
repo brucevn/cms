@@ -1,0 +1,363 @@
+CREATE OR REPLACE PACKAGE portal_ldap_utils
+  IS
+     function count_users(p_user varchar2)
+      return number;
+
+      function get_groups(p_start number,p_end number,p_group varchar2)
+      return number;
+
+     function count_groups(p_group varchar2)
+      return number;
+
+      function getGroupIds(p_user varchar2)
+       return varchar2;
+
+
+      function get_users(p_start number,p_end number,p_user varchar2)
+      return number;
+
+     function get_user(p_id number)
+      return varchar2;
+
+     function get_users_(p_start number,p_end number,p_user varchar2)
+      return varchar2;
+
+     function getId(p_name varchar2)
+     return varchar2;
+
+     function getUserInfo(p_id number)
+     return varchar2;
+     FUNCTION GET_USER_GROUP_NAME(p_id varchar2,p_isUser number)
+     RETURN VARCHAR2;
+
+END;
+/
+CREATE OR REPLACE PACKAGE BODY portal_ldap_utils
+IS
+    function get_users(p_start number,p_end number,p_user varchar2)
+    return number
+       IS
+          l_id       NUMBER;
+          l_person_rec portal.wwsec_person%rowtype;
+          type a_curosr is ref cursor;
+          l_cursor a_curosr;
+          l_user varchar2(1024);
+          l_varray varray_varchar2 := varray_varchar2();
+          l_count number :=0;
+          l_query varchar2(1024);
+    BEGIN
+      portal.wwctx_api.set_context('public',null,null);
+      if(p_user is not null and length(p_user)>0)
+      then
+        l_query:='select id from portal.wwsec_person$ where portal_user=''Y'' and upper(user_name) like ''%'||upper(p_user)||'%'' order by user_name asc';
+      else
+        l_query:='select id from portal.wwsec_person$ where portal_user=''Y'' order by user_name asc';
+      end if;
+      open l_cursor for l_query;
+      loop
+      fetch l_cursor into l_id;
+      exit when l_cursor%notfound;
+        begin
+            l_person_rec := portal.wwsec_api.person_info
+             (
+                 p_person_id => l_id
+             );
+             l_count:=l_count+1;
+             if(l_count >= p_start and l_count<=p_end)
+             then
+                 if(l_person_rec.email is not null)
+                 then
+                     l_user:=l_person_rec.id||'/'||l_person_rec.user_name||'/'||l_person_rec.email;
+                 else
+                     l_user:=l_person_rec.id||'/'||l_person_rec.user_name||'/'||' ';
+                 end if;
+                 l_varray.EXTEND();
+                 l_varray(l_varray.count):=l_user;
+             end if;
+             EXCEPTION when others then
+                null;
+        end;
+     end loop;
+     select system_portal_temp_seq.nextval into l_id from dual;
+     insert into system_portal_temp values(l_id,l_varray);
+     return l_id;
+   EXCEPTION
+      WHEN others
+      THEN
+         null;
+   END;
+    function count_users(p_user varchar2)
+    return number
+    is
+        l_count number:=0;
+        l_query varchar2(1024);
+        type a_curosr is ref cursor;
+        l_cursor a_curosr;
+        l_id       NUMBER;
+        l_person_rec portal.wwsec_person%rowtype;
+    begin
+      portal.wwctx_api.set_context('public',null,null);
+      if(p_user is not null and length(p_user)>0)
+      then
+        l_query:='select id from portal.wwsec_person$ where portal_user=''Y'' and upper(user_name) like ''%'||upper(p_user)||'%'' order by user_name asc';
+      else
+        l_query:='select id from portal.wwsec_person$ where portal_user=''Y'' order by user_name asc';
+      end if;
+      open l_cursor for l_query;
+      loop
+      fetch l_cursor into l_id;
+      exit when l_cursor%notfound;
+        begin
+            l_person_rec := portal.wwsec_api.person_info
+             (
+                 p_person_id => l_id
+             );
+             l_count:=l_count+1;
+             EXCEPTION when others then
+                null;
+        end;
+     end loop;
+     return l_count;
+    end;
+
+    function get_groups(p_start number,p_end number,p_group varchar2)
+    return number
+       IS
+          l_id       NUMBER;
+          l_group_rec portal.wwsec_group$%rowtype;
+          type a_curosr is ref cursor;
+          l_cursor a_curosr;
+          l_group varchar2(1024);
+          l_varray varray_varchar2 := varray_varchar2();
+          l_count number :=0;
+          l_query varchar2(1024);
+    BEGIN
+      portal.wwctx_api.set_context('public',null,null);
+      if(p_group is not null and length(p_group)>0)
+      then
+        l_query:='select id from portal.wwsec_group$ where upper(name) like ''%'||upper(p_group)||'%'' and upper(name) not like ''(%'' order by name asc';
+      else
+        l_query:='select id from portal.wwsec_group$ where upper(name) not like ''(%'' order by name asc';
+      end if;
+      open l_cursor for l_query;
+      loop
+      fetch l_cursor into l_id;
+      exit when l_cursor%notfound;
+        begin
+            l_group_rec := portal.wwsec_api.group_info
+             (
+                 p_group_id => l_id
+             );
+             l_count :=l_count+1;
+             if(l_count >= p_start and l_count<=p_end)
+             then
+                 if(l_group_rec.description is not null)
+                 then
+                     l_group:=l_group_rec.id||'/'||l_group_rec.name||'/'||l_group_rec.description;
+                 else
+                    l_group:=l_group_rec.id||'/'||l_group_rec.name||'/'||' ';
+                 end if;
+                 l_varray.EXTEND();
+                 l_varray(l_varray.count):=l_group;
+             end if;
+             exception when others then null;
+        end;
+     end loop;
+     select system_portal_temp_seq.nextval into l_id from dual;
+     insert into system_portal_temp values(l_id,l_varray);
+     return l_id;
+   EXCEPTION
+      WHEN others
+      THEN
+         null;
+   END;
+   function count_groups(p_group varchar2)
+    return number
+    IS
+          l_id       NUMBER;
+          l_group_rec portal.wwsec_group$%rowtype;
+          type a_curosr is ref cursor;
+          l_cursor a_curosr;
+          l_group varchar2(1024);
+          l_varray varray_varchar2 := varray_varchar2();
+          l_count number :=0;
+          l_query varchar2(1024);
+    BEGIN
+      portal.wwctx_api.set_context('public',null,null);
+      if(p_group is not null and length(p_group)>0)
+      then
+        l_query:='select id from portal.wwsec_group$ where upper(name) like ''%'||upper(p_group)||'%'' and upper(name) not like ''(%'' order by name asc';
+      else
+        l_query:='select id from portal.wwsec_group$ where upper(name) not like ''(%'' order by name asc';
+      end if;
+      open l_cursor for l_query;
+      loop
+      fetch l_cursor into l_id;
+      exit when l_cursor%notfound;
+        begin
+            l_group_rec := portal.wwsec_api.group_info
+             (
+                 p_group_id => l_id
+             );
+             l_count :=l_count+1;
+             exception when others then null;
+        end;
+     end loop;
+     return l_count;
+   EXCEPTION
+      WHEN others
+      THEN
+         null;
+    end;
+    function getGroupIds(p_user varchar2)
+   return varchar2
+   is
+    l_string varchar2(500);
+    l_array portal.wwsec_api.idarray;
+   begin
+        l_array := portal.wwsec_api.user_in_groups(p_user);
+        for i in l_array.first..l_array.last
+        loop
+            l_string:=l_string||','||l_array(i);
+        end loop;
+        return substr(l_string,2);
+   end;
+
+   function get_user(p_id number)
+    return varchar2
+       IS
+          l_id       NUMBER;
+          l_person_rec portal.wwsec_person%rowtype;
+          type a_curosr is ref cursor;
+          l_cursor a_curosr;
+          l_user varchar2(1024);
+          l_varray varray_varchar2 := varray_varchar2();
+          l_count number :=0;
+          l_query varchar2(1024);
+    BEGIN
+      portal.wwctx_api.set_context('public',null,null);
+      l_query:='select id,num from (select id,rownum num from (select id from portal.wwsec_person$ where portal_user=''Y'' order by user_name asc))';
+
+        begin
+            l_person_rec := portal.wwsec_api.person_info
+             (
+                 p_person_id => p_id
+             );
+             if(l_person_rec.email is not null)
+             then
+                 l_user:=l_person_rec.id||'/'||l_person_rec.user_name||'/'||l_person_rec.email;
+             else
+                 l_user:=l_person_rec.id||'/'||l_person_rec.user_name||'/'||' ';
+             end if;
+             l_varray.EXTEND();
+             l_varray(l_varray.count):=l_user;
+             EXCEPTION when others then
+                return sqlerrm;
+        end;
+        return l_user;
+   EXCEPTION
+      WHEN others
+      THEN
+         null;
+   END;
+
+   function get_users_(p_start number,p_end number,p_user varchar2)
+    return varchar2
+       IS
+          l_id       NUMBER;
+          l_person_rec portal.wwsec_person%rowtype;
+          type a_curosr is ref cursor;
+          l_cursor a_curosr;
+          l_user varchar2(1024);
+          l_varray varray_varchar2 := varray_varchar2();
+          l_count number :=0;
+          l_query varchar2(1024);
+    BEGIN
+      portal.wwctx_api.set_context('public',null,null);
+      if(p_user is not null and length(p_user)>0)
+      then
+        l_query:='select id,num from (select id,rownum num from (select id from portal.wwsec_person$ where portal_user=''Y'' and upper(user_name) like ''%'||upper(p_user)||'%'' and USER_NAME!=''PUBLIC'' order by user_name asc)) where num>='||p_start||' and num<='||p_end;
+      else
+        l_query:='select id,num from (select id,rownum num from (select id from portal.wwsec_person$ where portal_user=''Y'' and USER_NAME!=''PUBLIC'' order by user_name asc)) where num>='||p_start||' and num<='||p_end;
+      end if;
+      open l_cursor for l_query;
+      loop
+      fetch l_cursor into l_id,l_count;
+      exit when l_cursor%notfound;
+        begin
+            l_person_rec := portal.wwsec_api.person_info
+             (
+                 p_person_id => l_id
+             );
+             if(l_person_rec.email is not null)
+             then
+                 l_user:=l_person_rec.id||'/'||l_person_rec.user_name||'/'||l_person_rec.email;
+             else
+                 l_user:=l_person_rec.id||'/'||l_person_rec.user_name||'/'||' ';
+             end if;
+             l_varray.EXTEND();
+             l_varray(l_varray.count):=l_user;
+             EXCEPTION when others then
+                return l_id||l_user||':'||sqlerrm;
+        end;
+     end loop;
+     --select system_portal_temp_seq.nextval into l_id from dual;
+     --insert into system_portal_temp values(l_id,l_varray);
+     return l_user;
+   EXCEPTION
+      WHEN others
+      THEN
+         return sqlerrm;
+   END;
+   function getId(p_name varchar2)
+   return varchar2
+   is
+   begin
+        return ''||portal.wwsec_api.id(p_name);
+   end;
+   function getUserInfo(p_id number)
+   return varchar2
+   is
+        l_person_rec portal.wwsec_person%rowtype;
+        l_user varchar2(1024);
+   begin
+        portal.wwctx_api.set_context('public',null,null);
+        l_person_rec := portal.wwsec_api.person_info
+       (
+           p_person_id => p_id
+       );
+       if(l_person_rec.email is not null)
+       then
+           l_user:=l_person_rec.id||'/'||l_person_rec.user_name||'/'||l_person_rec.email;
+       else
+           l_user:=l_person_rec.id||'/'||l_person_rec.user_name||'/'||' ';
+       end if;
+       return l_user;
+   end getUserInfo;
+
+   FUNCTION GET_USER_GROUP_NAME(p_id varchar2,p_isUser number)
+   RETURN VARCHAR2
+   IS
+        l_person_rec portal.wwsec_person%rowtype;
+        l_group_rec portal.wwsec_group$%rowtype;
+   BEGIN
+    portal.wwctx_api.set_context('public',null,null);
+    IF(p_isUser=1)
+    THEN
+        l_person_rec := portal.wwsec_api.person_info
+       (
+           p_person_id => p_id
+       );
+       RETURN l_person_rec.user_name;
+    ELSE
+        l_group_rec := portal.wwsec_api.group_info
+          (
+              p_group_id => p_id
+          );
+          RETURN l_group_rec.name;
+    end IF;
+    EXCEPTION WHEN OTHERS THEN
+    RETURN SQLERRM;
+   END;
+END;
+/
